@@ -1,0 +1,15 @@
+{
+  "name": "postgres-source-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "172.31.128.1",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "dinhnt",
+    "database.dbname": "dinhnt",
+    "database.server.name": "pg-server-1",
+    "table.include.list": "public.users,public.orders,public.products,public.order_items",
+    "plugin.name": "pgoutput",
+	"topic.prefix": "dbserver1"
+  }
+}

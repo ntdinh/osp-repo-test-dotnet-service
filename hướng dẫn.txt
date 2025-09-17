@@ -1,0 +1,42 @@
+Thành phần file docker build local
+	-Zookeeper: quản lý của kafka
+	-Kafka: lưu trữ của các sự kiện dưới dạng message của topic(topic users, role..)
+	-Kafka Connect: cầu nối giữa kafka và postgresql
+	-Kafka-ui(option): cài thêm để xem các topic trên browser
+
+- File để đăng kí thông tin của postgresql với kafka với filename: register-postgres.json
+	{
+	  "name": "postgres-source-connector",
+	  "config": {
+		"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+		"database.hostname": "192.168.1.39",
+		"database.port": "5432",
+		"database.user": "postgres",
+		"database.password": "dinhnt",
+		"database.dbname": "dinhnt",
+		"database.server.name": "pg-server",
+		"table.include.list": "public.users,public.orders,public.products,public.order_items",
+		"plugin.name": "pgoutput",
+		"topic.prefix": "dbserver"
+	  }
+	}
+-> chạy file này trên port của docker:
+curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \ http://localhost:8083/connectors/ -d @register-postgres.json
+
+- Run lệnh để kafka listen sự thay đổi của các topic
+kafka-console-consumer --bootstrap-server kafka:29092 --topic postgres_cdc.public.users,postgres_cdc.public.products --from-beginning...
+
+Config postgresql
+- cần set wal_level = logical(minimal, replica, logical)
+
+-- Note: cần check ipconfig của máy
+--Kiểm tra xem có đang running ko:
+curl -X GET http://localhost:8083/connectors/postgres-source-connector/status
+--Restart:
+curl -X POST http://localhost:8083/connectors/postgres-source-connector/restart        
+--Delete rồi Restart lại
+curl -X DELETE http://localhost:8083/connectors/postgres-source-connector   
+
+file: pg_hba.config:
+host    dinhnt    dinhnt    172.31.128.1/24    md5
+host all all 0.0.0.0/0 md5
